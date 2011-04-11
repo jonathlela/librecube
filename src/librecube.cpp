@@ -1,8 +1,7 @@
-#include <stdio.h>
+#include <iostream>
 
 int main (int argc, char *argv[])
 {
-  fprintf(stdout,"Whoa ! It's already 20%% cooler than minecraft !\n");
+  std::cout << "Whoa ! It's already 20% cooler than minecraft !" << std::endl;
   return 0;
 }
-
