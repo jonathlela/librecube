@@ -1,0 +1,3 @@
+= librecube
+
+librecube is a distributed clone of minecraft with geolocation features.
