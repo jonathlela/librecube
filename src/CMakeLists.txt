@@ -7,7 +7,14 @@ include_directories(
   ${LibreCube_SOURCE_DIR}/include
 )
 
-add_executable(librecube librecube.cpp)
+file(
+  GLOB_RECURSE
+  source_files
+  *.cpp
+  ../include/*.h
+)
+
+add_executable(librecube ${source_files})
 
 target_link_libraries(librecube
   ${SFML_LIBRARY}
