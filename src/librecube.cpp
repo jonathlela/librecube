@@ -10,6 +10,13 @@ namespace librecube {
       window(sf::VideoMode(800, 600, 32), "SFML OpenGL"),
       game() {
 
+    glClearDepth(1.f);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90.f, 1.f, 1.f, 500.f);
   }
 
   /**
