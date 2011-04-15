@@ -73,6 +73,19 @@ namespace librecube {
         );
 
     // display a block
-    test_block.draw(vector(6, -2, 2));
+//    test_block.draw(vector(6, -2, 2));
+
+    vector where;
+    for (int i = -8; i < 8; i+=2) {
+
+      where.set_x(i);
+      for (int j = -8; j < 8; j+=2) {
+        where.set_z(j);
+        for (int k = -8; k < 8; k+=2) {
+          where.set_y(k);
+          test_block.draw(where);
+        }
+      }
+    }
   }
 }
