@@ -1,5 +1,6 @@
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/buildtools/cmake/")
 
+find_package(VAST)
 find_package(SFML)
 find_package(OpenGL)
 
