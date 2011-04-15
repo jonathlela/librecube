@@ -4,22 +4,24 @@
 #include "vector.hpp"
 
 namespace librecube {
+  namespace graphics {
 
-  /**
-   * @brief Represents a block placed in the world.
-   *
-   * TODO: implement several types of block
-   */
-  class block {
+    /**
+     * @brief Represents a block placed in the world.
+     *
+     * TODO: implement several types of block
+     */
+    class block {
 
-    public:
+      public:
 
-      block();
-      ~block();
+        block();
+        ~block();
 
-      void draw(const vector& position);
-  };
+        void draw(const vector& position);
+    };
+
+  }
 }
 
 #endif
-
