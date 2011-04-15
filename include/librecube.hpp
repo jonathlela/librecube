@@ -14,7 +14,7 @@ namespace librecube {
     private:
 
       sf::Window window;     // the SFML window
-      world game;            // the game logics
+      graphics::world game;  // the game logics
 
       void process_event(sf::Event& event);
       void update();

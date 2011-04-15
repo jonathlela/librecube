@@ -6,26 +6,29 @@
 #include <SFML/Window.hpp>
 
 namespace librecube {
+  namespace graphics {
 
-  /**
-   * @brief Represents the LibreCube world.
-   */
-  class world {
+    /**
+     * @brief Represents the LibreCube world.
+     */
+    class world {
 
-    private:
+      private:
 
-      camera cam;
-      block test_block;
+        camera cam;
+        block test_block;
 
-    public:
+      public:
 
-      world();
-      ~world();
+        world();
+        ~world();
 
-      void process_event(sf::Event& event);
-      void update();
-      void draw();
-  };
+        void process_event(sf::Event& event);
+        void update();
+        void draw();
+    };
+
+  }
 }
 
 #endif
