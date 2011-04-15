@@ -7,9 +7,10 @@ namespace librecube {
    * @brief Creates and initializes a LibreCube application.
    */
   librecube::librecube():
-      window(sf::VideoMode(800, 600, 32), "SFML OpenGL"),
+      window(sf::VideoMode(800, 600, 32), "LibreCube"),
       game() {
 
+    // initialize OpenGL settings
     glClearDepth(1.f);
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glEnable(GL_DEPTH_TEST);
@@ -31,6 +32,7 @@ namespace librecube {
    */
   void librecube::main_loop() {
 
+    sf::Clock clock;
     while (window.IsOpened())
     {
       sf::Event event;
@@ -38,8 +40,17 @@ namespace librecube {
         process_event(event);
       }
       if (window.IsOpened()) {
+
         update();
-        draw();
+
+        float elapsed_time = clock.GetElapsedTime();
+        if (elapsed_time > 0.04) { // 25 FPS
+          draw();
+          clock.Reset();
+        }
+        else {
+          sf::Sleep(0.01);
+        }
       }
     }
   }
