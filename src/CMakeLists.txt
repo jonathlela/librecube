@@ -1,11 +1,13 @@
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/buildtools/cmake/")
 
 find_package(VAST)
+find_package(ZLIB)
 find_package(SFML)
 find_package(OpenGL)
 
 include_directories(
   ${LibreCube_SOURCE_DIR}/include
+  ${VAST_INCLUDE_DIR}
 )
 
 file(
@@ -15,9 +17,17 @@ file(
   ../include/*.h
 )
 
-add_executable(librecube ${source_files})
+add_definitions("-g")
 
-target_link_libraries(librecube
-  ${SFML_LIBRARY}
-  ${OPENGL_LIBRARY}
+#target_link_libraries(librecube
+#  ${SFML_LIBRARY}
+#  ${OPENGL_LIBRARY}
+#)
+
+add_executable(vast hw-vast.cpp)
+
+target_link_libraries(vast
+  ${VAST_LIBRARY}
+  ${ZLIB_LIBRARY}
 )
+
