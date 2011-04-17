@@ -1,12 +1,14 @@
 #include "ace/ACE.h"
 #include "VASTVerse.h"
-#include "VASTsim.h"
 #include <iostream>
 #include <pthread.h>
 
- 
 #define VAST_EVENT_LAYER    1                   // layer ID for sending events
 #define VAST_UPDATE_LAYER   2                   // layer ID for sending updates
+
+#define DEFAULT_AOI         195     // the AOI-radius size for all nodes
+#define DIM_X               768     // size of the world & its default values
+#define DIM_Y               768
 
 #define INPUT_SIZE          200                 // size for chat message
  
@@ -25,7 +27,7 @@ int main (int argc, char *argv[])
     VAST *          self      = NULL;
 
     world_t     world_id = 0;
-    int         node_no = (-1);
+    int         node_no = 0;
 
     int tick = 0;
  
@@ -33,14 +35,30 @@ int main (int argc, char *argv[])
 
     int             input;                // keyboard input
     int interval = 0;
-    // store default gateway address
+ 
+    bool is_gateway = true;
+
     char str[] = "127.0.0.1:1037";
 
-    bool is_gateway;
-    SimPara simpara;
-  
-    if ((node_no = InitPara (VAST_NET_ACE, netpara, simpara, "", &is_gateway, &world_id, &aoi, str, &interval)) == (-1))
-      exit (0);
+    // set default values
+    aoi.center.x = (coord_t)(rand () % DIM_X);
+    aoi.center.y = (coord_t)(rand () % DIM_Y);
+    aoi.radius   = (length_t)DEFAULT_AOI;
+
+    netpara.port  = GATEWAY_DEFAULT_PORT;
+
+    netpara.relay_limit     = 0;
+    netpara.client_limit    = 0;
+    netpara.overload_limit  = 0;
+
+    // by default the node can be relay & matcher
+    netpara.is_relay = true;
+    netpara.is_matcher = true;
+
+    // dynamic load balancing is enabled by default
+    netpara.is_static = false;
+
+    netpara.is_entry = true;
 
     // create VAST node factory
     world = new VASTVerse (is_gateway, str, &netpara, NULL, NULL, 40);
