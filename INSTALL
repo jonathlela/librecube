@@ -1,0 +1,6 @@
+From tarball :
+     make
+
+From git :
+     cmake .
+     make
