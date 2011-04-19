@@ -1,11 +1,13 @@
 #include "world.hpp"
+#include <iostream>
 
 namespace librecube {
   namespace graphics {
 
     world::world() {
-
       cam.set_position(vector(-20, 10, 2));
+      ava.set_position(cam.get_position());
+      ind.set_map_position(cam.get_position());
     }
 
     world::~world() {
@@ -20,18 +22,26 @@ namespace librecube {
 
           case sf::Key::Z:
             cam.move_forward(1);
+	    ava.set_position(cam.get_position());
+	    ind.set_map_position(cam.get_position());
             break;
 
           case sf::Key::S:
             cam.move_backward(1);
+	    ava.set_position(cam.get_position());
+	    ind.set_map_position(cam.get_position());
             break;
 
           case sf::Key::D:
             cam.move_right(1);
+	    ava.set_position(cam.get_position());
+	    ind.set_map_position(cam.get_position());
             break;
 
           case sf::Key::Q:
             cam.move_left(1);
+	    ava.set_position(cam.get_position());
+	    ind.set_map_position(cam.get_position());
             break;
 
           case sf::Key::Right:
@@ -50,6 +60,10 @@ namespace librecube {
             cam.look_down(2);
             break;
 
+          case sf::Key::H:
+            ind.send_helloworld();
+            break;
+
           default:
             break;
         }
@@ -60,7 +74,8 @@ namespace librecube {
     }
 
     void world::update() {
-
+      ind.tick();
+      ind.receive_msg();
     }
 
     void world::draw() {

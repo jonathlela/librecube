@@ -3,6 +3,8 @@
 
 #include "camera.hpp"
 #include "block.hpp"
+#include "avatar.hpp"
+#include "individual.hpp"
 #include <SFML/Window.hpp>
 
 namespace librecube {
@@ -16,6 +18,8 @@ namespace librecube {
       private:
 
         camera cam;
+        avatar ava;
+        network::individual ind;
         block test_block;
 
       public:

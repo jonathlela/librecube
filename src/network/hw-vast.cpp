@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
     VASTVerse *     world      = NULL;
     VAST *          self      = NULL;
 
-    world_t     world_id = 0;
+    world_t     world_id = VAST_DEFAULT_WORLD_ID;;
     int         node_no = 0;
 
     int tick = 0;
