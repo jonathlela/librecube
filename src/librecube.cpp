@@ -71,6 +71,12 @@ namespace librecube {
         glViewport(0, 0, event.Size.Width, event.Size.Height);
         break;
 
+      case sf::Event::KeyPressed: // quit button
+	if (event.Key.Code == sf::Key::X) {
+	  window.Close();
+	}
+        break;
+
       default: // forward any other event to the game
         game.process_event(event);
     }
