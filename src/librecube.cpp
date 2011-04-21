@@ -74,6 +74,8 @@ namespace librecube {
       case sf::Event::KeyPressed: // quit button
 	if (event.Key.Code == sf::Key::X) {
 	  window.Close();
+	} else {
+	  game.process_event(event);
 	}
         break;
 
