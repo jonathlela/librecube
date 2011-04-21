@@ -4,6 +4,7 @@
 #include "VASTVerse.h"
 #include "vector.hpp"
 #include "avatar.hpp"
+#include <queue>
 #include <iostream>
 
 
@@ -31,15 +32,22 @@ namespace librecube {
         Vast::id_t sub_no;
         Vast::Area aoi;
 
+        std::queue<Vast::Message> messages;
+        
+        std::vector<Vast::Node *> neighbors;
+
       public:
 
         individual();
         ~individual();
 
         const Vast::Position& get_map_position() const;
+        const Vast::id_t get_id() const;
 
         void set_map_position(const Vast::Position& position);
         void set_map_position(const vector& position);
+
+        std::vector<Vast::Node *> get_neighbors(void);
 
         void receive_msg(void);
         void send_helloworld(void);

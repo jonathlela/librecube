@@ -89,13 +89,20 @@ namespace librecube {
       this->self->move (this->sub_no, this->aoi);
     }
 
+   /**
+     * @brief Get the individual id
+     */
+    const Vast::id_t individual::get_id() const{
+      this->sub_no;
+    }
+
     /**
      * @brief Sets the position of the individual in the world.
      * @param position coordinates of the new position
      */
     void individual::set_map_position(const vector& position) {
 
-      this->aoi.center.set((coord_t)position.get_x(), (coord_t)position.get_y(), (coord_t)position.get_z());
+      this->aoi.center.set((coord_t)position.get_x(), (coord_t)position.get_z(), (coord_t)position.get_y());
       this->self->move (this->sub_no, this->aoi);
     }
 
@@ -140,6 +147,13 @@ namespace librecube {
     }
 
     /**
+     * @brief Gets neighbours
+     */
+    std::vector<Node *> individual::get_neighbors() {
+      return this->self->list ();
+    }
+
+    /**
      * @brief Performs routine tasks
      */
     void individual::tick() {
@@ -153,7 +167,7 @@ namespace librecube {
      */
     std::ostream& operator<<(std::ostream& out, const individual& individual) {
 
-      out << "position: (" << individual.aoi.center.x << ", " << individual.aoi.center.y << ", " << individual.aoi.center.z <<  "), radius: " << individual.aoi.radius;
+      out << "position: (" << individual.aoi.center.x << ", " << individual.aoi.center.z << ", " << individual.aoi.center.y <<  "), radius: " << individual.aoi.radius;
       return out;
     }
 

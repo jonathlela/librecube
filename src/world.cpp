@@ -102,6 +102,28 @@ namespace librecube {
           }
         }
       }
+ 
+      // display others avatars
+      const std::vector<Vast::Node *> neighbors = ind.get_neighbors();
+      size_t j;
+      std::map<Vast::id_t, avatar>::iterator it;
+
+      for(j=0; j< neighbors.size(); j++) {
+	Vast::id_t id = neighbors[j]->id;
+	double x = (double) neighbors[j]->aoi.center.x;
+	double y = (double) neighbors[j]->aoi.center.z;
+	double z = (double) neighbors[j]->aoi.center.y;
+	it = oth_avatars.find(id);
+	if (it == oth_avatars.end()) {
+	  it = oth_avatars.begin();
+	  avatar av;	  
+	  av.set_position(vector(x,y,z));
+	  it = oth_avatars.insert(it, std::make_pair(id,av)); 
+	} else {
+	  it->second.set_position(vector(x,y,z));
+	}
+	test_block.draw(it->second.get_position());
+      }
     }
   }
 }

@@ -5,6 +5,8 @@
 #include "block.hpp"
 #include "avatar.hpp"
 #include "individual.hpp"
+#include "VASTVerse.h"
+#include <map>
 #include <SFML/Window.hpp>
 
 namespace librecube {
@@ -19,6 +21,7 @@ namespace librecube {
 
         camera cam;
         avatar ava;
+        std::map<const Vast::id_t, avatar> oth_avatars;
         network::individual ind;
         block test_block;
 
