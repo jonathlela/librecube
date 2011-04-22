@@ -141,7 +141,7 @@ namespace librecube {
       Message msg_send (msgtype);
       char helloworld [50];
 
-      snprintf(helloworld, sizeof(helloworld), "%i hello world", sub_no);
+      snprintf(helloworld, sizeof(helloworld), "%ju hello world", (uintmax_t)sub_no);
       msg_send.store (helloworld, strlen(helloworld), true);
       this->self->publish (this->aoi, event_layer, msg_send);
     }
