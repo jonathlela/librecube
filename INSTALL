@@ -1,6 +1,17 @@
-From tarball :
-     make
+You need ACE (http://www.cse.wustl.edu/~schmidt/ACE.html), packaged as
+`libace` in modern distributions
 
-From git :
+You need vast from https://github.com/jonathlela/vast
+
+Vast Installation:
+
+     git clone git://github.com/jonathlela/vast.git
+     git checkout cmake
+     cmake .
+     make 
+     (make install)
+
+librecube installation
+     git clone git://github.com/jonathlela/librecube.git
      cmake .
      make
