@@ -24,6 +24,7 @@ namespace librecube {
         std::map<const Vast::id_t, avatar> oth_avatars;
         network::individual ind;
         block test_block;
+	int* blocs;
 
       public:
 
@@ -36,6 +37,7 @@ namespace librecube {
     };
 
   }
+  int* generate_world();
 }
 
 #endif

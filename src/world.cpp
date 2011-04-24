@@ -1,5 +1,8 @@
 #include "world.hpp"
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <cmath>
 
 namespace librecube {
   namespace graphics {
@@ -8,6 +11,7 @@ namespace librecube {
       cam.set_position(vector(-20, 10, 2));
       ava.set_position(cam.get_position());
       ind.set_map_position(cam.get_position());
+      blocs = librecube::generate_world();
     }
 
     world::~world() {
@@ -91,8 +95,21 @@ namespace librecube {
 
       // display a block
       vector where;
-      for (int i = -8; i < 8; i+=2) {
-
+      int x, y, z, w_x, w_y, w_z;
+      w_x = w_y = w_z = 32;
+      for (x=0; x<w_x; x++) {
+	where.set_z(x);
+	for (y=0; y<w_y; y++) {
+	  where.set_x(y);
+          for (z=0; z<w_z; z++) {
+            if (blocs[x*w_y*w_z+y*w_z+z]) {
+	      where.set_y(z);
+              test_block.draw(where);
+            }
+	  }
+	}
+      }
+      /*for (int i = -8; i < 8; i+=2) {
         where.set_x(i);
         for (int j = -8; j < 8; j+=2) {
           where.set_z(j);
@@ -101,7 +118,7 @@ namespace librecube {
             test_block.draw(where);
           }
         }
-      }
+      }*/
  
       // display others avatars
       const std::vector<Vast::Node *> neighbors = ind.get_neighbors();
@@ -126,4 +143,63 @@ namespace librecube {
       }
     }
   }
+
+  int* generate_world(){
+    int x, y, z;
+    int w_x, w_y, w_z;
+    w_x = w_y = w_z = 32;
+
+    // initialize random seed
+    srand ( time(NULL) );
+
+    int kp_ratio = 4;
+    // create keypoints
+    int kp_sx = w_x/kp_ratio+1;
+    int kp_sy = w_y/kp_ratio+1;
+    int keypoints[kp_sx*kp_sy];
+    for (x=0; x<kp_sx; x++) {
+      for (y=0; y<kp_sy; y++) {
+        keypoints[x*kp_sy+y] = floor(rand() % 20)+2;
+	std::cout << keypoints[x*kp_sy+y] << " ";
+      }
+      std::cout << endl;
+    }
+
+    // create world
+    int* board = (int*) malloc(sizeof(int)*w_x*w_y*w_z);
+    int mh, kfx, kfy, sx, sy;
+    float kx, ky, p, v, pvs, ps;
+    for (x=0; x<w_x; x++) {
+      for (y=0; y<w_y; y++) {
+        mh = 1;
+	kx = x/float(kp_ratio); kfx = floor(kx);
+	ky = y/float(kp_ratio); kfy = floor(ky); 
+	if (kx==kfx && ky==kfy) {
+	  mh = keypoints[kfx*kp_sy+kfy];
+	}else{
+	  // bilinear interpolation
+	  pvs = ps = 0;
+	  for (sx=0; sx<=1; sx++) {
+	    for (sy=0; sy<=1; sy++) {
+	      p = 1/sqrt(pow(kx-(kfx+sx),2)+pow(ky-(kfy+sy), 2));
+	      v = keypoints[(kfx+sx)*kp_sy+(kfy+sy)];
+	      pvs = pvs + p*v;
+	      ps = ps + p;
+            }
+	  }
+	  mh = floor(pvs/ps);
+	}
+	//std::cout << mh << " ";
+        for (z=0;z<mh;z++) {
+	    board[x*w_y*w_z+y*w_z+z] = 1;
+	}
+	for (;z<w_z;z++) {
+	    board[x*w_y*w_z+y*w_z+z] = 0;
+	}
+      }
+      //std::cout << endl;
+    }
+    return board;
+  } 
+
 }
