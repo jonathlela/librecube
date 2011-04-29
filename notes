@@ -1,0 +1,59 @@
+FIND_LEADER(chunk c):
+---------------------
+order voronoi_neighbors(lvl 1) by dist to c.
+leader is first in this list.
+
+
+JOIN_CHUNK
+-----------
+leader <- find_leader()
+if leader == self:
+   old <- find_second_closest()
+   get_copy(old)
+else:
+   get_copy(leader)
+
+
+MODIFY_CHUNK
+------------
+leader <- find_leader()
+if leader == self:
+   send_broadcast_mod_with_ack(aoi)
+else:
+   ack <- send_broadcast_mod(aoi)
+   if ack:
+      just draw it
+
+
+MOVE
+----
+new <- find_second_closest()
+send_copy(new)
+
+
+REPLICATE
+---------
+leader <- find_leader()
+if leader == self:
+   PROPAGATE(voronoi_neighbor(lvl 1), copy, MAX_LVL - 1)
+
+PROPAGATE
+---------
+propagate until lvl == 0 to neighbors not in recv list
+
+
+DELETE_REPLICATE
+----------------
+leader <- find_leader(copy)
+hops <- dist_to(leader)
+delete if hops > MAX_LVL
+
+
+CONSISTENCY
+-----------
+mod <- get_mod_msg(aoi)
+chk <- get_chunk_id(mod)
+led <- find_leader(chk)
+if chk == led:
+   check_consistency
+   send_broadcast_ack(yes|no)
