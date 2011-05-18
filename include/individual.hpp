@@ -48,6 +48,7 @@ namespace librecube {
         void set_map_position(const vector& position);
 
         std::vector<Vast::Node *> get_neighbors(void);
+        Vast::Voronoi* get_voronoi(void);
 
         void receive_msg(void);
         void send_helloworld(void);

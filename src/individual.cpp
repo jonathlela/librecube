@@ -52,7 +52,7 @@ namespace librecube {
 	  if ((self = world->getVASTNode ()) != NULL)
 	    {
 	      sub_no = self->getSubscriptionID ();
-	      state = JOINED;
+ 	      state = JOINED;
 	    }
       
 	  world->tick ();
@@ -151,6 +151,10 @@ namespace librecube {
      */
     std::vector<Node *> individual::get_neighbors() {
       return this->self->list ();
+    }
+
+    Vast::Voronoi* individual::get_voronoi() {
+      return this->world->getMatcherVoronoi();
     }
 
     /**

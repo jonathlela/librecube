@@ -20,6 +20,8 @@ namespace librecube {
       private:
 
         camera cam;
+        camera top;
+        camera* current_cam;
         avatar ava;
         std::map<const Vast::id_t, avatar> oth_avatars;
         network::individual ind;

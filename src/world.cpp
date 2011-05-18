@@ -3,15 +3,21 @@
 #include <stdlib.h>
 #include <time.h>
 #include <cmath>
+#include <GL/gl.h>
 
 namespace librecube {
   namespace graphics {
 
+    const double PI = 3.14159265358979323846; // PI from <cmath> is not portable
+
     world::world() {
       cam.set_position(vector(-20, 10, 2));
+      top.set_position(vector(0, 50, 0));
+      top.look_down(90);
       ava.set_position(cam.get_position());
       ind.set_map_position(cam.get_position());
       blocs = librecube::generate_world();
+      current_cam = &cam; 
     }
 
     world::~world() {
@@ -41,6 +47,15 @@ namespace librecube {
 	    ava.set_position(cam.get_position());
 	    ind.set_map_position(cam.get_position());
             break;
+
+          case sf::Key::F:
+	    if (current_cam == &cam) {
+	      current_cam = &top;
+	    } else {
+	      current_cam = &cam;
+	    }     
+            break;
+
 
           case sf::Key::Q:
             cam.move_left(1);
@@ -85,8 +100,8 @@ namespace librecube {
     void world::draw() {
 
       // look towards the camera's direction
-      const vector& position = cam.get_position();
-      const vector& target = cam.get_target();
+      const vector& position = current_cam->get_position();
+      const vector& target = current_cam->get_target();
       gluLookAt(
           position.get_x(), position.get_y(), position.get_z(),  // current position
           target.get_x(), target.get_y(), target.get_z(),        // where to look
@@ -98,16 +113,17 @@ namespace librecube {
       int x, y, z, w_x, w_y, w_z;
       w_x = w_y = w_z = 32;
       for (x=0; x<w_x; x++) {
-	where.set_z(x);
-	for (y=0; y<w_y; y++) {
-	  where.set_x(y);
+      	where.set_z(x);
+      	for (y=0; y<w_y; y++) {
+      	  where.set_x(y);
           for (z=0; z<w_z; z++) {
             if (blocs[x*w_y*w_z+y*w_z+z]) {
-	      where.set_y(z);
+      	      where.set_y(z);
+	      
               test_block.draw(where);
             }
-	  }
-	}
+      	  }
+      	}
       }
       /*for (int i = -8; i < 8; i+=2) {
         where.set_x(i);
@@ -119,7 +135,7 @@ namespace librecube {
           }
         }
       }*/
- 
+
       // display others avatars
       const std::vector<Vast::Node *> neighbors = ind.get_neighbors();
       size_t j;
@@ -141,6 +157,23 @@ namespace librecube {
 	}
 	test_block.draw(it->second.get_position());
       }
+
+      int k; 
+
+     //display voronoi
+      if (current_cam == &top) {
+	std::vector<Vast::line2d> &lines = ind.get_voronoi()->getedges();
+	std::cout << "voronoi :" << ind.get_voronoi()->size() << " " << lines.size() << std::endl;
+        for (k=0; k < lines.size (); k++)
+        { 
+          std::cout << "lines :" << lines[k].seg.p1.x << lines[k].seg.p1.y << lines[k].seg.p2.x << lines[k].seg.p2.y << std::endl;
+	  glBegin(GL_LINES);
+	  glVertex3d(lines[k].seg.p1.x, 30, lines[k].seg.p1.y);
+	  glVertex3d(lines[k].seg.p2.x, 30, lines[k].seg.p1.y);
+	  glEnd( );
+        }               
+      }
+ 
     }
   }
 
