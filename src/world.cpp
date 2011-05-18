@@ -4,20 +4,27 @@
 #include <time.h>
 #include <cmath>
 #include <GL/gl.h>
+#include <SFML/Network.hpp>
 
 namespace librecube {
   namespace graphics {
 
     const double PI = 3.14159265358979323846; // PI from <cmath> is not portable
 
-    world::world() {
+    world::world(): 
+      node() {
+
+      sf::IPAddress address("192.168.0.3");
+      unsigned short port = 5436;
+
       cam.set_position(vector(-20, 10, 2));
       top.set_position(vector(0, 50, 0));
       top.look_down(90);
       ava.set_position(cam.get_position());
       ind.set_map_position(cam.get_position());
       blocs = librecube::generate_world();
-      current_cam = &cam; 
+      current_cam = &cam;
+      node.join_gateway(address, port);
     }
 
     world::~world() {

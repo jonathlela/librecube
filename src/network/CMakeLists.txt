@@ -12,7 +12,7 @@ include_directories(
 
 add_definitions("-g")
 
-add_executable(vast hw-vast.cpp)
+add_executable(vast hw-vast.cpp.0)
 
 target_link_libraries(vast
   ${VAST_LIBRARY}

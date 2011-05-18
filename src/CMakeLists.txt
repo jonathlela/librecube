@@ -14,6 +14,7 @@ file(
   GLOB
   source_files
   *.cpp
+  network/*.cpp
   ../include/*.h
 )
 
