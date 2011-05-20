@@ -5,7 +5,7 @@
 #include "block.hpp"
 #include "avatar.hpp"
 #include "individual.hpp"
-#include "node.hpp"
+#include "peer.hpp"
 #include "VASTVerse.h"
 #include <map>
 #include <SFML/Window.hpp>
@@ -26,7 +26,7 @@ namespace librecube {
         avatar ava;
         std::map<const Vast::id_t, avatar> oth_avatars;
         network::individual ind;
-        network::node node;
+        network::peer peer;
         block test_block;
 	int* blocs;
 

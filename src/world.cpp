@@ -11,10 +11,9 @@ namespace librecube {
 
     const double PI = 3.14159265358979323846; // PI from <cmath> is not portable
 
-    world::world(): 
-      node() {
+    world::world(): peer() {
 
-      sf::IPAddress address("192.168.0.3");
+      sf::IPAddress address(sf::IPAddress::GetLocalAddress());
       unsigned short port = 5436;
 
       cam.set_position(vector(-20, 10, 2));
@@ -24,7 +23,11 @@ namespace librecube {
       ind.set_map_position(cam.get_position());
       blocs = librecube::generate_world();
       current_cam = &cam;
-      node.join_gateway(address, port);
+      peer.join_gateway(address, port);
+      // network::node* node = new network::node();
+      // cout << "node created " << std::endl;
+      // node->join_gateway(address, port);
+      // cout << "node joined " << std::endl;
     }
 
     world::~world() {
