@@ -7,12 +7,13 @@ namespace librecube {
     sf::Mutex global_mutex;
 
     const unsigned short node::RADIUS = 16;
+    const std::string node::UNASSIGNED_ID = "UNASSIGNED";
 
     /**
      * @brief Creates a node
      */
     node::node():
-      id(),
+      id(UNASSIGNED_ID),
       position() {
 
     }
@@ -40,7 +41,6 @@ namespace librecube {
       this->id = id;
     }
 
-
     /**
      * @brief Returns the node position.
      */
@@ -54,7 +54,7 @@ namespace librecube {
      */
     void node::set_position(const vector& position) {
 
-      sf::Lock Lock(global_mutex);      
+      sf::Lock Lock(global_mutex);  
       this->position = position;
     }
 
@@ -94,12 +94,15 @@ namespace librecube {
      */    
     sf::Packet& operator>>(sf::Packet& packet, node& node)
     {
-      int x, y, z;
+      double x, y, z;
       packet >> node.id >> x >> y >> z;
       node.position = vector(x, y, z);
       return packet;
     }
 
+    bool node::operator<(const node& node) const {
+      return (this->id < node.id);
+    }
 
     /**
      * @brief Prints a string representation of a node on a stream.
@@ -108,7 +111,7 @@ namespace librecube {
      */
     std::ostream& operator<<(std::ostream& out, const node& node) {
 
-      out << "node: " << node.id;
+      out << "node: " << node.id << " " << node.position.get_x() << "," << node.position.get_y() << "," << node.position.get_z();
       return out;
     }
 

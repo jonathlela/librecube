@@ -2,6 +2,7 @@
 #include <SFML/System.hpp>
 #include <sys/time.h>
 #include <string>
+#include <string.h>
 
 namespace librecube {
   namespace network {
@@ -10,15 +11,16 @@ namespace librecube {
 
     const unsigned char peer::MSG_GET_ID = 0;
     const unsigned char peer::MSG_SET_ID = 1;
-    const unsigned char peer::MSG_GET_NODE = 2;
-    const unsigned char peer::MSG_GET_NEIGHBORS = 3;
-    const unsigned char peer::MSG_SET_NEIGHBORS = 4;
-    const unsigned char peer::MSG_GET_ADDRESSES = 5;
-    const unsigned char peer::MSG_SET_ADDRESSES = 6;
-    const unsigned char peer::MSG_GET_SUBSCRIPTION = 7;
-    const unsigned char peer::MSG_SET_SUBSCRIPTION = 8;
-
-    const std::string peer::UNASSIGNED_ID = "UNASSIGNED";
+    const unsigned char peer::MSG_GET_ADDRESS = 2;
+    const unsigned char peer::MSG_SET_ADDRESS = 3;
+    const unsigned char peer::MSG_GET_NEIGHBORS = 4;
+    const unsigned char peer::MSG_SET_NEIGHBORS = 5;
+    const unsigned char peer::MSG_GET_ADDRESSES = 6;
+    const unsigned char peer::MSG_SET_ADDRESSES = 7;
+    const unsigned char peer::MSG_GET_SUBSCRIPTION = 8;
+    const unsigned char peer::MSG_SET_SUBSCRIPTION = 9;
+    const unsigned char peer::MSG_PUBLISH_SUBSCRIPTION = 10;
+    const unsigned char peer::MSG_PUBLISH_POSITION = 11;
 
     /**
      * @brief Creates a peer
@@ -66,9 +68,42 @@ namespace librecube {
       this->site.set_position(position);
     }
 
-    sf::Packet& operator<<(sf::Packet& packet, const std::set<node *>& set) {
+    void peer::add_neighbor(const node& node) {
 
-      std::set<node *>::iterator it;      
+      if (node.get_id() != this->site.get_id() && node.get_id() != node::UNASSIGNED_ID)
+	this->neighbors.insert(node);
+    }
+
+    void peer::add_neighbors(const std::set<node>& nodes) {
+
+      std::set<node>::iterator it;
+
+      for (it=nodes.begin(); it!=nodes.end(); it++) {
+	if (it->get_id() != this->site.get_id() && it->get_id() != node::UNASSIGNED_ID)
+	  this->neighbors.insert(*it);
+      }
+    }
+
+    void peer::add_address(const std::string id,
+			   const std::pair <sf::IPAddress ,unsigned short> address) {
+
+      if (id != this->site.get_id() && id != node::UNASSIGNED_ID)
+	this->addresses[id] = address;
+    }
+
+    void peer::add_addresses(const std::map<std::string, std::pair <sf::IPAddress ,unsigned short> > addresses) {
+
+      std::map<std::string, std::pair <sf::IPAddress ,unsigned short> >::const_iterator it;
+
+      for (it=addresses.begin(); it!=addresses.end(); it++) {
+	if (it->first != this->site.get_id() && it->first != node::UNASSIGNED_ID)
+	  this->addresses[it->first] = it->second;
+      }
+    }
+
+    sf::Packet& operator<<(sf::Packet& packet, const std::set<node>& set) {
+
+      std::set<node>::iterator it;      
 
       packet << ((int) set.size());
       for (it=set.begin(); it!=set.end(); it++) {
@@ -77,7 +112,7 @@ namespace librecube {
       return packet;
     }
     
-    sf::Packet& operator>>(sf::Packet& packet, std::set<node *>& set) {
+    sf::Packet& operator>>(sf::Packet& packet, std::set<node>& set) {
 
       int size;
 
@@ -85,14 +120,30 @@ namespace librecube {
       for (int i=0; i < size ;i++) {
 	node new_site;
 	packet >> new_site;
-	set.insert(&new_site);
+	set.insert(new_site);
       }
+      return packet;
+    }
+
+   sf::Packet& operator<<(sf::Packet& packet, const sf::IPAddress& ip) {
+      
+      packet << ip.ToInteger();
+      return packet;
+    }
+
+ 
+    sf::Packet& operator>>(sf::Packet& packet, sf::IPAddress& ip) {
+      
+      uint32_t new_ip;
+      
+      packet >> new_ip;
+      ip = sf::IPAddress(new_ip);
       return packet;
     }
 
     sf::Packet& operator<<(sf::Packet& packet, const std::pair<sf::IPAddress ,unsigned short>& pair) {
       
-      packet << pair.first.ToInteger() << pair.second;
+      packet << pair.first << pair.second;
       return packet;
     }
 
@@ -102,7 +153,7 @@ namespace librecube {
       unsigned short new_port;
 
       packet >> new_address >> new_port;
-      pair.first = sf::IPAddress(new_address);
+      pair.first = new_address;
       pair.second = new_port;
       return packet;
     }
@@ -134,192 +185,249 @@ namespace librecube {
       return packet;
     }
 
-    void peer::send_message(const unsigned char type,
-				  sf::Packet packet_content, 
+    bool peer::send_message(const unsigned char type,
+				  sf::Packet& content, 
 				  sf::SocketTCP *socket) {
 
-     sf::Packet packet_type;
-     sf::Packet packet_id;
+      sf::Packet packet;
 
-     packet_type << type;
-     socket->Send(packet_type);
+      packet << type << site.get_id();
+      packet.Append(content.GetData(), content.GetDataSize());
 
-     packet_id << site.get_id();
-     socket->Send(packet_id);
-
-     socket->Send(packet_content);
+      return socket->Send(packet);
     }
 
-    void peer::send_message(const unsigned char type, 
-				  sf::Packet packet_content, 
+    bool peer::send_message(const unsigned char type, 
+				  sf::Packet& content, 
 				  const sf::IPAddress gateway,
 				  const unsigned short port) {
       sf::SocketTCP client;
  
       client.Connect(port, gateway);
-      send_message(type, packet_content, &client);
+      return send_message(type, content, &client);
+    }
+
+
+    bool peer::send_message(const unsigned char type, 
+			    sf::Packet& packet, 
+			    const std::string to_id) {
+
+      std::map<std::string, std::pair<sf::IPAddress ,unsigned short> >::iterator it;
+
+      it = addresses.find(to_id);
+      if (it!=addresses.end())
+	return send_message(type, packet, it->second.first, it->second.second);
+      return false;
+    }
+
+    bool peer::msg_get_id(sf::SocketTCP *socket, const std::string& from_id, 
+    			  sf::Packet& packet) {
+
+      sf::Packet content;
+
+      content << site.get_id();
+      return send_message(MSG_SET_ID, content, socket);	  
+    }
+
+    bool peer::msg_get_address(sf::SocketTCP *socket, const std::string& from_id, 
+			       sf::Packet& packet) {
+
+      sf::Packet content;
+
+      content << std::make_pair(this->address, this->port);
+      return send_message(MSG_SET_ADDRESS, content, socket);	  
+    }
+
+
+    bool peer::msg_get_neighbors(sf::SocketTCP *socket, const std::string& from_id, 
+			       sf::Packet& packet) {
+
+      sf::Packet content;
+
+      content << this->neighbors;
+      send_message(MSG_SET_NEIGHBORS, content, socket);
+    }
+
+
+    bool peer::msg_get_addresses(sf::SocketTCP *socket, const std::string& from_id, 
+				    sf::Packet& packet) {
+
+      sf::Packet content;
+      
+      content << this->addresses;
+      send_message(MSG_SET_ADDRESSES, content, socket);
+    }
+
+
+    bool peer::msg_get_subscription(sf::SocketTCP *socket, const std::string& from_id, 
+				    sf::Packet& packet) {
+
+      sf::Packet content;
+      std::stringstream n_id;
+      timeval time = {0, 0};
+      
+      gettimeofday(&time, NULL);
+      n_id << time.tv_sec << time.tv_usec << address.ToInteger();
+      content << n_id.str();    
+      return send_message(MSG_SET_SUBSCRIPTION, content, socket);     
+    }
+
+
+    bool peer::msg_publish_subscription(sf::SocketTCP *socket, const std::string& from_id, 
+					sf::Packet& packet) {
+
+      node new_node;
+      sf::IPAddress new_address;
+      unsigned short new_port;
+      
+      packet >> new_node >> new_address >> new_port;
+      add_neighbor(new_node);
+      add_address(new_node.get_id(),std::make_pair(new_address,new_port));
+      log << "pub set :" << " " << new_node.get_id() << " " << new_address << ":"  << new_port << std::endl;
+      return true;
+    }
+
+    bool peer::msg_receive(sf::SocketTCP *socket, std::string& from_id, sf::Packet& packet) {
+      
+      bool status = true;
+      unsigned short type;
+
+      status = (socket->Receive(packet) == sf::Socket::Done);
+      if (status) {
+	unsigned char type;
+	std::string p_id;
+	packet >> type >> from_id;
+      }
+      return status;
+    }
+
+    bool peer::msg_receive_id(sf::SocketTCP *socket, std::string& id) {
+      
+      sf::Packet packet;
+      std::string from_id;
+      bool status = true;
+      
+      status = msg_receive(socket, from_id, packet);
+      packet >> id;
+      log << "id_set: " << id << std::endl;   
+      return status;
+    }
+
+    bool peer::msg_receive_address(sf::SocketTCP *socket, std::pair<sf::IPAddress ,unsigned short>& address) {
+      
+      sf::Packet packet;
+      std::string from_id;
+      int ip;
+      bool status = true;
+      
+      status = msg_receive(socket, from_id, packet);
+      packet >> address;
+      log << "address_set: " << address.first.ToString() << ":" << address.second << std::endl;   
+      return status;
+    }
+
+    bool peer::msg_receive_neighbors(sf::SocketTCP *socket, std::set<node>& neighbors) {
+      
+      sf::Packet packet;
+      std::string from_id;
+      std::set<node>::iterator it;
+      bool status = true;
+
+      status = msg_receive(socket, from_id, packet);
+      packet >> neighbors;
+      log << "neighbors_set: ";
+      for (it=neighbors.begin(); it!=neighbors.end(); it++) {
+	log << (node)*it;
+      }
+      log << std::endl;
+      return status;
+    }
+
+    bool peer::msg_receive_addresses(sf::SocketTCP *socket,
+				     std::map<std::string, std::pair<sf::IPAddress ,unsigned short> >& addresses) {
+      
+      sf::Packet packet;
+      std::string from_id;
+      std::map<std::string, std::pair <sf::IPAddress ,unsigned short> >::iterator it;
+	    
+      bool status = true;
+
+      status = msg_receive(socket, from_id, packet);	    
+      packet >> addresses;
+      log << "addresses set: ";
+      for (it=addresses.begin(); it!=addresses.end(); it++) {
+	log << it->first << ", " << it->second.first.ToInteger() << ":" << it->second.second << " ";
+      }
+      log << std::endl;
+      return status;      
+    }
+
+    bool peer::msg_receive_subscription(sf::SocketTCP *socket, std::string& id) {
+      
+      sf::Packet packet;
+      std::string from_id;
+      bool status = true;
+      
+      status = msg_receive(socket, from_id, packet);
+      packet >> id;
+      log << "subscription_set : " << id  << std::endl;   
+      return status;
+    }
+
+    long long peer::get_time() {
+      std::stringstream n_id;
+      timeval time = {0, 0};
+      
+      gettimeofday(&time, NULL);
+      return time.tv_sec * 1000000 + time.tv_usec;
     }
 
     bool peer::receive_message(sf::SocketTCP *socket) {
       
-      sf::Packet packet_type;
-      sf::Packet packet_id;
-      sf::Packet packet_content;
+      sf::Packet content;
       bool status = true;
 
-      status = (socket->Receive(packet_type) == sf::Socket::Done
-		&& socket->Receive(packet_id) == sf::Socket::Done);
+      status = (socket->Receive(content) == sf::Socket::Done);
 
       if (status) {
 	  unsigned char type;
 	  std::string p_id;
 
-	  packet_type >> type;
-	  packet_id >> p_id;
-
-	  log << "type : " << ((int) type) << ", id: "<< p_id << std::endl;
+	  content >> type >> p_id;
+	  log << "@type : " << ((int) type) << ", id: "<< p_id << std::endl;
 
 	  switch( type ) {
 	    
 	  case MSG_GET_ID : {
-	    std::stringstream n_id;
-	    timeval time = {0, 0};
-	    sf::Packet id_packet;
-
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    gettimeofday(&time, NULL);
-	    n_id << time.tv_sec << time.tv_usec << address.ToInteger();
-	    log << "id_get : " << n_id.str() << std::endl;   
-	    id_packet << n_id.str();
-	    send_message(MSG_SET_ID, id_packet, socket);
-	    log << "sent " << std::endl;   
+	    msg_get_id(socket, p_id, content);
 	  }
 	    break;
 
-	  case MSG_SET_ID : {
-	    std::string n_id;
-	    
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    packet_content >> n_id;
-	    log << "id_set : " << n_id << std::endl;
-	    site.set_id(n_id);
+	  case MSG_GET_ADDRESS : {
+	    msg_get_address(socket, p_id, content);
 	  }
 	    break;
 
 	  case MSG_GET_ADDRESSES : {
-	    sf::Packet address_packet;
-	    std::map<std::string, std::pair <sf::IPAddress ,unsigned short> >::iterator it;
-
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    
-	    log << "addresses :";
-	    for (it=addresses.begin(); it!=addresses.end(); it++) {
-	      log << it->first << "=" << it->second.first.ToInteger() << ":" << it->second.second << " ";
-	    }
-	    log << std::endl;
-	    address_packet << addresses;
-	    send_message(MSG_SET_ADDRESSES, address_packet, socket);
-	    log << "sent " << std::endl;   
+	    msg_get_addresses(socket, p_id, content);
 	  }
 	    break;
 
-	  case MSG_SET_ADDRESSES : {
-	    std::map<std::string, std::pair <sf::IPAddress ,unsigned short> > new_addresses;
-	    std::map<std::string, std::pair <sf::IPAddress ,unsigned short> >::iterator it;
-	    
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    packet_content >> new_addresses;
-	    log << "set addresses :";
-	    for (it=new_addresses.begin(); it!=new_addresses.end(); it++) {
-	      log << it->first << "=" << it->second.first.ToInteger() << ":" << it->second.second << " ";
-	      addresses.insert(std::make_pair(it->first, it->second));
-	    }
-	    log << std::endl;
-	    log << "addresses set : " << std::endl;
-	  }
-	    break;	    
-
-	  case MSG_GET_NODE : {
-	    sf::Packet node_packet;
-    	    std::set<node *> curr_site;
-
-	    curr_site.insert(&site);
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    log << "node_get : " << std::endl;   
-	    node_packet << curr_site;
-	    send_message(MSG_SET_NEIGHBORS, node_packet, socket);
-	    log << "sent " << std::endl;
-	    
-	  }
-	    break;
-	    
 	  case MSG_GET_NEIGHBORS : {
-	    sf::Packet neigbors_packet;
-
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    log << "neigbors_get : " << std::endl;   
-	    neigbors_packet << neighbors;
-	    send_message(MSG_SET_NEIGHBORS, neigbors_packet, socket);
-	    log << "sent " << neigbors_packet << "…" << std::endl;
-	    
-	  }
-	    break;
-	    
-	  case MSG_SET_NEIGHBORS : {
-	    std::set<node *> new_neighbors;
-	    std::set<node *>::iterator it;
-
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    packet_content >> new_neighbors;
-	    
-	    log << "neighbors ";
-	    for (it=neighbors.begin(); it!=neighbors.end(); it++) {
-	      log << *it;
-	    }
-	    log << std::endl;
-	    log << "added_neigbors ";
-	    for (it=new_neighbors.begin(); it!=new_neighbors.end(); it++) {
-	      log << "a" << *it;
-	    }
-	    log << std::endl;
- 	    for (it=new_neighbors.begin(); it!=new_neighbors.end(); it++) {
-	      if ((*it)->get_id() != site.get_id())
-		log << "b" << *it;
-	    }
-	    log << "neighbors ";
-	    for (it=neighbors.begin(); it!=neighbors.end(); it++) {
-	      log << "c" << *it;
-	    }
-	    log << std::endl;
+	    msg_get_neighbors (socket, p_id, content);
 	  }
 	    break;
 
 	  case MSG_GET_SUBSCRIPTION : {
-	    std::stringstream n_id;
-	    timeval time = {0, 0};
-	    sf::Packet id_packet;
-
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    gettimeofday(&time, NULL);
-	    n_id << time.tv_sec << time.tv_usec << address.ToInteger();
-	    log << "id_get : " << n_id.str() << std::endl;   
-	    id_packet << n_id.str();
-	    send_message(MSG_SET_SUBSCRIPTION, id_packet, socket);
-	    log << "sent " << std::endl;   
+	    msg_get_subscription(socket, p_id, content);
 	  }
 	    break;
 
-	  case MSG_SET_SUBSCRIPTION : {
-	    std::string n_id;
-	    
-	    status = socket->Receive(packet_content) == sf::Socket::Done;
-	    packet_content >> n_id;
-	    log << "id_set : " << n_id << std::endl;
-	    site.set_id(n_id);
+	  case MSG_PUBLISH_SUBSCRIPTION : {
+	    msg_publish_subscription(socket, p_id, content);
 	  }
 	    break;
 
-	      
 	  default:
 	    log << "??" << std::endl;
 	    status = false;
@@ -338,7 +446,6 @@ namespace librecube {
     void peer::Run() {
 
       bool running = false;
-      site.set_id(UNASSIGNED_ID);
       port = DEFAULT_PORT;
       address = sf::IPAddress::GetLocalAddress();
 
@@ -362,12 +469,8 @@ namespace librecube {
 
 	unsigned int nb_sockets = selector.Wait(0.1f);
 
-	log << nb_sockets << std::endl; 
-
 	for (unsigned int i = 0; i < nb_sockets; ++i) {
 
-	  log << "socket:" << i << std::endl;
-	  
 	  sf::SocketTCP socket = selector.GetSocketReady(i);
 	  
 	  if (socket == server) {
@@ -381,7 +484,7 @@ namespace librecube {
 	    selector.Add(client);
 	  } else {
 	    // Else, it is a client socket so we can read the data he sent
-	      receive_message(&socket);
+	    receive_message(&socket);
 	  }   
 	}
       }
@@ -395,16 +498,38 @@ namespace librecube {
      * @param port the port of the gateway
      */
     void peer::join_gateway(const sf::IPAddress gateway, const unsigned short port) {
-
+      
       sf::Packet packet_content;
       sf::SocketTCP client;
- 
+      node gat;
+      std::pair<sf::IPAddress ,unsigned short> gat_ip;
+      std::string given_id, gat_id;
+      std::set<node> new_neighbors;
+      std::set<node>::iterator it;
+      std::map<std::string, std::pair <sf::IPAddress ,unsigned short> > new_addresses;
+
+
       client.Connect(port, gateway);
+      send_message(MSG_GET_SUBSCRIPTION, packet_content, &client); 
+      msg_receive_subscription(&client, given_id);
+      site.set_id(given_id);
       send_message(MSG_GET_ID, packet_content, &client); 
-      receive_message(&client);
-      log << "given id" << site.get_id() << std::endl;
-      send_message(MSG_GET_NEIGHBORS, packet_content, &client);
-      receive_message(&client);
+      msg_receive_id(&client, gat_id);
+      send_message(MSG_GET_ADDRESS, packet_content, &client);
+      gat.set_id(gat_id);
+      add_neighbor(gat);
+      msg_receive_address(&client, gat_ip);
+      add_address(gat_id, gat_ip);
+      send_message(MSG_GET_NEIGHBORS, packet_content, &client); 
+      msg_receive_neighbors(&client, new_neighbors);
+      add_neighbors(new_neighbors);
+      send_message(MSG_GET_ADDRESSES, packet_content, &client); 
+      msg_receive_addresses(&client, new_addresses);
+      add_addresses(new_addresses);
+      packet_content << this->site << this->address << this->port;
+      for (it=this->neighbors.begin(); it!=this->neighbors.end(); it++) {
+	send_message(MSG_PUBLISH_SUBSCRIPTION, packet_content, it->get_id()); 
+      }
     }
 
     /**
