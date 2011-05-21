@@ -4,8 +4,6 @@
 namespace librecube {
   namespace network {
 
-    sf::Mutex global_mutex;
-
     const unsigned short node::RADIUS = 16;
     const std::string node::UNASSIGNED_ID = "UNASSIGNED";
 
@@ -54,7 +52,6 @@ namespace librecube {
      */
     void node::set_position(const vector& position) {
 
-      sf::Lock Lock(global_mutex);  
       this->position = position;
     }
 
@@ -81,9 +78,9 @@ namespace librecube {
      * @param packet an output packet
      * @param node the node
      */
-    sf::Packet& operator<<(sf::Packet& packet, const node& node)
-    {
-      packet << node.id << node.position.get_x() << node.position.get_y() << node.position.get_z();
+    sf::Packet& operator<<(sf::Packet& packet, const node& node) {
+
+      packet << node.id << node.position;
       return packet;
     }
 
@@ -92,11 +89,9 @@ namespace librecube {
      * @param packet an input packet
      * @param node the node
      */    
-    sf::Packet& operator>>(sf::Packet& packet, node& node)
-    {
-      double x, y, z;
-      packet >> node.id >> x >> y >> z;
-      node.position = vector(x, y, z);
+    sf::Packet& operator>>(sf::Packet& packet, node& node) {
+
+      packet >> node.id >> node.position;
       return packet;
     }
 

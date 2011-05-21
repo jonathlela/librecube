@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <SFML/Network.hpp>
 
 namespace librecube {
 
@@ -42,6 +43,8 @@ namespace librecube {
       friend vector operator*(double scale, vector& v);
       friend vector operator*(vector& v, double scale);
       friend vector& operator*=(vector& v, double scale);
+      friend sf::Packet& operator<<(sf::Packet& packet, const vector& position);
+      friend sf::Packet& operator>>(sf::Packet& packet, vector& position);
       friend std::ostream& operator<<(std::ostream& out, const vector& v);
 
       vector cross_product(const vector& other) const;
@@ -208,6 +211,21 @@ namespace librecube {
 
     out << "(" << v.x << "," << v.y << "," << v.z << ")";
     return out;
+  }
+
+  inline sf::Packet& operator<<(sf::Packet& packet, const vector& position) {
+      
+    packet << position.get_x() << position.get_y() << position.get_z();
+    return packet;   
+  }
+   
+  inline sf::Packet& operator>>(sf::Packet& packet, vector& position) {
+    
+    double x, y, z;
+    
+    packet >> x >> y >> z;
+    position = vector(x, y, z);
+    return packet;
   }
 }
 

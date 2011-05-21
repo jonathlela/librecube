@@ -20,14 +20,10 @@ namespace librecube {
       top.set_position(vector(0, 50, 0));
       top.look_down(90);
       ava.set_position(cam.get_position());
-      ind.set_map_position(cam.get_position());
       blocs = librecube::generate_world();
       current_cam = &cam;
       peer.join_gateway(address, port);
-      // network::node* node = new network::node();
-      // cout << "node created " << std::endl;
-      // node->join_gateway(address, port);
-      // cout << "node joined " << std::endl;
+      peer.set_position(cam.get_position());
     }
 
     world::~world() {
@@ -43,19 +39,19 @@ namespace librecube {
           case sf::Key::Z:
             cam.move_forward(1);
 	    ava.set_position(cam.get_position());
-	    ind.set_map_position(cam.get_position());
+	    peer.set_position(cam.get_position());
             break;
 
           case sf::Key::S:
             cam.move_backward(1);
 	    ava.set_position(cam.get_position());
-	    ind.set_map_position(cam.get_position());
+	    peer.set_position(cam.get_position());
             break;
 
           case sf::Key::D:
             cam.move_right(1);
 	    ava.set_position(cam.get_position());
-	    ind.set_map_position(cam.get_position());
+	    peer.set_position(cam.get_position());
             break;
 
           case sf::Key::F:
@@ -70,7 +66,7 @@ namespace librecube {
           case sf::Key::Q:
             cam.move_left(1);
 	    ava.set_position(cam.get_position());
-	    ind.set_map_position(cam.get_position());
+	    peer.set_position(cam.get_position());
             break;
 
           case sf::Key::Right:
@@ -90,7 +86,7 @@ namespace librecube {
             break;
 
           case sf::Key::H:
-            ind.send_helloworld();
+            peer.send_msg(std::string("Hello world !"));
             break;
 
           default:
@@ -103,8 +99,8 @@ namespace librecube {
     }
 
     void world::update() {
-      ind.tick();
-      ind.receive_msg();
+      //ind.tick();
+      //ind.receive_msg();
     }
 
     void world::draw() {
@@ -146,43 +142,44 @@ namespace librecube {
         }
       }*/
 
+      //display self
+      test_block.draw(peer.get_position());
+
       // display others avatars
-      const std::vector<Vast::Node *> neighbors = ind.get_neighbors();
+      const std::map<std::string, network::node> neighbors = peer.get_aoi_neighbors();
       size_t j;
-      std::map<Vast::id_t, avatar>::iterator it;
+      std::map<std::string, network::node>::const_iterator itn;
+      std::map<std::string, avatar>::iterator ita;
 
-      for(j=0; j< neighbors.size(); j++) {
-	Vast::id_t id = neighbors[j]->id;
-	double x = (double) neighbors[j]->aoi.center.x;
-	double y = (double) neighbors[j]->aoi.center.z;
-	double z = (double) neighbors[j]->aoi.center.y;
-	it = oth_avatars.find(id);
-	if (it == oth_avatars.end()) {
-	  it = oth_avatars.begin();
+      for (itn=neighbors.begin(); itn!=neighbors.end(); itn++) {
+	std::string id = itn->first;
+	ita = oth_avatars.find(id);
+	if (ita == oth_avatars.end()) {
+	  ita = oth_avatars.begin();
 	  avatar av;	  
-	  av.set_position(vector(x,y,z));
-	  it = oth_avatars.insert(it, std::make_pair(id,av)); 
+	  av.set_position(itn->second.get_position());
+	  ita = oth_avatars.insert(ita, std::make_pair(id,av)); 
 	} else {
-	  it->second.set_position(vector(x,y,z));
+	  ita->second.set_position(itn->second.get_position());
 	}
-	test_block.draw(it->second.get_position());
+	test_block.draw(itn->second.get_position());
       }
 
-      int k; 
-
-     //display voronoi
-      if (current_cam == &top) {
-	std::vector<Vast::line2d> &lines = ind.get_voronoi()->getedges();
-	std::cout << "voronoi :" << ind.get_voronoi()->size() << " " << lines.size() << std::endl;
-        for (k=0; k < lines.size (); k++)
-        { 
-          std::cout << "lines :" << lines[k].seg.p1.x << lines[k].seg.p1.y << lines[k].seg.p2.x << lines[k].seg.p2.y << std::endl;
-	  glBegin(GL_LINES);
-	  glVertex3d(lines[k].seg.p1.x, 30, lines[k].seg.p1.y);
-	  glVertex3d(lines[k].seg.p2.x, 30, lines[k].seg.p1.y);
-	  glEnd( );
-        }               
-      }
+      // int k; 
+      //
+      //display voronoi
+      // if (current_cam == &top) {
+      // 	std::vector<Vast::line2d> &lines = ind.get_voronoi()->getedges();
+      // 	std::cout << "voronoi :" << ind.get_voronoi()->size() << " " << lines.size() << std::endl;
+      //   for (k=0; k < lines.size (); k++)
+      //   { 
+      //     std::cout << "lines :" << lines[k].seg.p1.x << lines[k].seg.p1.y << lines[k].seg.p2.x << lines[k].seg.p2.y << std::endl;
+      // 	  glBegin(GL_LINES);
+      // 	  glVertex3d(lines[k].seg.p1.x, 30, lines[k].seg.p1.y);
+      // 	  glVertex3d(lines[k].seg.p2.x, 30, lines[k].seg.p1.y);
+      // 	  glEnd( );
+      //   }               
+      // }
  
     }
   }
@@ -205,7 +202,7 @@ namespace librecube {
         keypoints[x*kp_sy+y] = floor(rand() % 20)+2;
 	std::cout << keypoints[x*kp_sy+y] << " ";
       }
-      std::cout << endl;
+      std::cout << std::endl;
     }
 
     // create world

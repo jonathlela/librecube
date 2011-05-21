@@ -4,9 +4,7 @@
 #include "camera.hpp"
 #include "block.hpp"
 #include "avatar.hpp"
-#include "individual.hpp"
 #include "peer.hpp"
-#include "VASTVerse.h"
 #include <map>
 #include <SFML/Window.hpp>
 
@@ -24,8 +22,7 @@ namespace librecube {
         camera top;
         camera* current_cam;
         avatar ava;
-        std::map<const Vast::id_t, avatar> oth_avatars;
-        network::individual ind;
+        std::map<std::string, avatar> oth_avatars;
         network::peer peer;
         block test_block;
 	int* blocs;
