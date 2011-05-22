@@ -35,6 +35,7 @@ namespace librecube {
         void process_event(sf::Event& event);
         void update();
         void draw();
+        void draw_minimap();
     };
 
   }

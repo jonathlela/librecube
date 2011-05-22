@@ -16,6 +16,8 @@ namespace librecube {
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glMatrixMode(GL_PROJECTION);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
     glLoadIdentity();
     gluPerspective(90.f, 1.f, 1.f, 500.f);
   }

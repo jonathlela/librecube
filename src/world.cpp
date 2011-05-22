@@ -103,6 +103,69 @@ namespace librecube {
       //ind.receive_msg();
     }
 
+    void world::draw_minimap()
+    {   
+      const std::map<std::string, network::node> neighbors = peer.get_aoi_neighbors();
+      std::map<std::string, network::node>::const_iterator it;
+
+      // ortho
+      glMatrixMode( GL_PROJECTION );
+      glPushMatrix();
+      glLoadIdentity();
+      glOrtho( 0.0f, 800.0f, 600.0f, 0.0f, -100.0f, 100.0f );
+      // topright
+      glMatrixMode( GL_MODELVIEW );
+      glPushMatrix();
+      glLoadIdentity();
+      glTranslatef( 671.0f, 0.0f, 0.0f );
+      // display peers
+      glPushMatrix();
+      glTranslatef( 64.0f, 64.0f, 0.0f );
+      float scale = 129.0f / (2*network::node::RADIUS + 1);
+      glScaled(scale, scale,scale);
+      // display other peers
+      for (it=neighbors.begin(); it!=neighbors.end(); it++) {
+	vector minimap_pos = it->second.get_position() - peer.get_position();
+	double x, y;
+	x = minimap_pos.get_z();
+	y = - minimap_pos.get_x();
+	glPushMatrix();
+	glTranslated( x, y, 0.0d );
+	glColor4f( 0.0f, 1.0f, 0.0f, 1.0f );
+	glBegin( GL_QUADS );
+	glVertex2f( 0.0f, 1.0f );
+	glVertex2f( 1.0f, 1.0f );
+	glVertex2f( 1.0f, 0.0f );
+	glVertex2f( 0.0f, 0.0f );
+	glEnd();
+	glPopMatrix();
+      }
+      //display self
+      glColor4f( 1.0f, 0.0f, 0.0f, 1.0f );
+      glBegin( GL_QUADS );
+      glVertex2f( 0.0f, 1.0f );
+      glVertex2f( 1.0f, 1.0f );
+      glVertex2f( 1.0f, 0.0f );
+      glVertex2f( 0.0f, 0.0f );
+      glEnd();
+      glPopMatrix();
+      // display bg
+      glColor4f( 1.0f, 1.0f, 1.0f, 0.3f );
+      glBegin( GL_QUADS );
+      glVertex2f( 0.0f, 129.0f );
+      glVertex2f( 129.0f, 129.0f );
+      glVertex2f( 129.0f, 0.0f );
+      glVertex2f( 0.0f, 0.0f );
+      glEnd();
+      glPopMatrix();
+      glPushMatrix();
+      glLoadIdentity();
+      glPopMatrix();
+      glMatrixMode( GL_PROJECTION );
+      glPopMatrix();
+    }
+    
+
     void world::draw() {
 
       // look towards the camera's direction
@@ -147,7 +210,6 @@ namespace librecube {
 
       // display others avatars
       const std::map<std::string, network::node> neighbors = peer.get_aoi_neighbors();
-      size_t j;
       std::map<std::string, network::node>::const_iterator itn;
       std::map<std::string, avatar>::iterator ita;
 
@@ -180,7 +242,9 @@ namespace librecube {
       // 	  glEnd( );
       //   }               
       // }
- 
+
+      //display minimap;
+      draw_minimap();
     }
   }
 

@@ -16,13 +16,12 @@ namespace librecube {
 
       private:
 
-        static const unsigned short RADIUS;
-
         std::string id;
         vector position;
       
       public:
 
+        static const unsigned short RADIUS;
         static const std::string UNASSIGNED_ID;
 
         node();
