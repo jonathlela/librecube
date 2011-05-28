@@ -103,9 +103,9 @@ namespace librecube {
       //ind.receive_msg();
     }
 
-    void world::draw_minimap()
-    {   
-      const std::map<std::string, network::node> neighbors = peer.get_aoi_neighbors();
+    void world::draw_minimap() { 
+  
+      const std::map<std::string, network::node> neighbors = peer.get_voronoi_nodes();
       std::map<std::string, network::node>::const_iterator it;
 
       // ortho

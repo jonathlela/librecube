@@ -18,7 +18,7 @@ file(
   ../include/*.h
 )
 
-add_definitions("-g")
+add_definitions("-g -O0")
 
 add_executable(librecube ${source_files})
 

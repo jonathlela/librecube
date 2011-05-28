@@ -30,9 +30,47 @@ namespace librecube {
     peer::peer():
       site(),
       is_up(false),
+      voronoid(),
       neighbors(), 
       addresses() {
-      
+
+      node n1, n2, n3, n4 ,n5, n6, n7, n8, n9, n10, n11;
+
+      n1.set_position(vector(-15,10,-8));
+      n1.set_id("1");
+      this->voronoi_nodes[n1.get_id()] = n1;
+      n2.set_position(vector(-12,10,1));
+      n2.set_id("2");
+      this->voronoi_nodes[n2.get_id()] = n2;
+      n3.set_position(vector(-9,10,10));
+      n3.set_id("3");
+      this->voronoi_nodes[n3.get_id()] = n3;
+      n4.set_position(vector(-24,10,-11));
+      n4.set_id("4");
+      this->voronoi_nodes[n4.get_id()] = n4;
+      n5.set_position(vector(-21,10,-2));
+      n5.set_id("5");
+      this->voronoi_nodes[n5.get_id()] = n5;
+      n6.set_position(vector(-18,10,7));
+      n6.set_id("6");
+      this->voronoi_nodes[n6.get_id()] = n6;
+      n7.set_position(vector(-30,10,-11));
+      n7.set_id("7");
+      this->voronoi_nodes[n7.get_id()] = n7;
+      n8.set_position(vector(-27,10,-5));
+      n8.set_id("8");
+      this->voronoi_nodes[n8.get_id()] = n8;
+      n9.set_position(vector(-27,10,4));
+      n9.set_id("9");
+      this->voronoi_nodes[n9.get_id()] = n9;
+      n10.set_position(vector(-33,10,7));
+      n10.set_id("10");
+      this->voronoi_nodes[n10.get_id()] = n10;
+      n11.set_position(vector(-27,10,13));
+      n11.set_id("11");
+      this->voronoi_nodes[n11.get_id()] = n11;
+      this->voronoid.generate_diagram(this->voronoi_nodes);
+
       Launch();
       while(!is_up) {usleep(10);}
     }
@@ -130,7 +168,7 @@ namespace librecube {
       packet << ((int) nodes.size());
       for (it=nodes.begin(); it!=nodes.end(); it++) {
 	packet << it->first << it->second;
-      }      
+      }       
       return packet;
     }
     
@@ -587,6 +625,11 @@ namespace librecube {
       for (it=this->neighbors.begin(); it!=this->neighbors.end(); it++) {
 	send_message(MSG_PUBLISH_SUBSCRIPTION, packet_content, it->first); 
       }
+    }
+
+    const std::map<std::string, node> peer::get_voronoi_nodes() const{
+
+      return this->voronoi_nodes;
     }
 
     /**

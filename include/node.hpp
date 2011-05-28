@@ -39,6 +39,7 @@ namespace librecube {
         friend sf::Packet& operator>>(sf::Packet& packet, node& node);
 
         bool operator<(const node& node) const;
+        bool operator==(const node& node) const;
 
         friend std::ostream& operator<<(std::ostream& out, const node& node);
     };

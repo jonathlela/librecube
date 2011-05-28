@@ -99,6 +99,11 @@ namespace librecube {
       return (this->id < node.id);
     }
 
+    bool node::operator==(const node& node) const {
+      return (this->id == node.id);
+    }
+
+
     /**
      * @brief Prints a string representation of a node on a stream.
      * @param out an output stream

@@ -3,6 +3,7 @@
 
 #include "vector.hpp"
 #include "node.hpp"
+#include "voronoi.hpp"
 #include <SFML/Network.hpp>
 #include <fstream>
 #include <sstream>
@@ -42,8 +43,12 @@ namespace librecube {
         node site;
 
         bool is_up;
+
+        voronoi voronoid;
         std::map<std::string, node> neighbors;
         std::map<std::string, node> aoi_neighbors;
+        std::map<std::string, node> voronoi_nodes;
+
         std::map<std::string, std::pair <sf::IPAddress ,unsigned short> > addresses;
 
         sf::SelectorTCP selector;
@@ -135,6 +140,7 @@ namespace librecube {
         const vector get_position() const;
         void set_position(const vector& position);
         const std::map<std::string, node> get_aoi_neighbors() const;
+        const std::map<std::string, node> get_voronoi_nodes() const;
 
         void join_gateway(const sf::IPAddress gateway, const unsigned short port);
 	void leave();
